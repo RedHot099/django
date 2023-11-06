@@ -201,6 +201,16 @@
                             <label for="withoutOverlay">Bez nakładki</label>
                         </div>
                     </div>
+                    
+
+                    <div class="color-picker-container">
+                        <label for="colorPicker">Wybierz kolor:</label>
+                        <input type="color" id="colorPicker" name="color" onchange="updateRGB(this.value)">
+                    </div>
+                    
+                    <div style="display:none;">
+                        <input type="hidden" id="rgbValue" name="rgbValue">
+                    </div>
             
                     <div class="form-group">
                         <label for="dateInput">Wybierz datę dla początku publikacji:</label>
