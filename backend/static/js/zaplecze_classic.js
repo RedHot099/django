@@ -40,7 +40,6 @@ $(document).ready(function () {
 	const month = String(today.getMonth() + 1).padStart(2, '0');
 	const year = today.getFullYear();
 	$('#dateInput').val(`${year}-${month}-${day}`);
-
 	// end of snippet
 
 	var cardId = $('#classic_main').data('card-id');
@@ -127,7 +126,7 @@ $(document).ready(function () {
 		const token = btoa(`${login}:${password}`);
 		const authHeader = { Authorization: `Basic ${token}` };
 
-		const apiUrl = `https://${domain}/wp-json/wp/v2/posts`;
+		const apiUrl = `https://${domain}/wp-json/wp/v2/posts?per_page=100`;
 
 		const tsvTitles = parseTSV($('#tsvInput').val()).map(decodeHTMLEntities);
 

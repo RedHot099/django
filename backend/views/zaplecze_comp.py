@@ -19,6 +19,10 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 import os
 from ..src.CreateWPblog.wp_api import WP_API
 
+from ..src.CreateWPblog.openai_article import OpenAI_article
+from ..src.CreateWPblog.openai_api import OpenAI_API
+import pandas as pd
+
 @method_decorator(csrf_exempt, name='dispatch')
 class ZapleczeComp(View):
     def get_object(self, zaplecze_id):
@@ -31,47 +35,46 @@ class ZapleczeComp(View):
         data = json.loads(request.body)
         zaplecze = self.get_object(zaplecze_id)
 
+        compSelect = data.get('compSelect')  # mouse / keyboard
+        compQuant = int(data.get('compQuant'))  # ilość porównań
+        graphicSource = data.get('graphicSource')  # pixabay, pexels, ai
+        pexels_api_key = "K4INRjrCzmznTXPESmWi4PyvmoV9VRqj9c9RKq1huu5ouhb4BO23RfFS"
+        overlay_option = data.get('overlayOption')  # withOverlay, withoutOverlay
+        date_input = data.get('dateInput')  # 2021-01-01
+        publishInterval = data.get('publishInterval')  # 2
+        openai.api_key = data.get('openai_api_key')  # sk
+        faq_option = data.get('faqOption')  # withFaq, withoutFaq
+        overlay_color = data.get('overlayColor') 
 
-        graphicSource = data.get("graphicSource") #pixabay, unsplash, pexels
-        # image_key = data.get("image_key") #openai, pixa, or unsplash
-        image_key = "36043348-2f97c422170679f5ed532a796" #openai, pixa, or unsplash
-        overlay_option = data.get("overlayOption") #wihOverlay, withoutOverlay
-        date_input = data.get("dateInput") #2021-01-01
-        publishInterval = data.get("publishInterval") #2
-        openai.api_key = data.get("openai_api_key") #sk
-        faq_option = data.get("faqOption") #withFaq, withoutFaq
+        filename = '../mouses.csv' if compSelect == 'mouse' else '../keyboards.csv' if compSelect == 'keyboard' else None
         
-        compSelect = data.get("compSelect") # mouse / keyboard
-        compQuant = data.get("compQuant")  # int
+        if filename is not None:
+            df = pd.read_csv(filename)
+            
+            compQuant = min(compQuant, len(df))
+            
+            sampled_df = df.sample(n=compQuant)
+            
+            print(sampled_df)
+        else:
+            print("Nieprawidłowy wybór: compSelect powinien być 'mouse' lub 'keyboard'.")
 
-        keyboardData = '''
-name,url,price,score,reviews,Producent,Rodzaj,Interfejs,Komunikacja,Typ klawiatury,Model,Kolor,Długość przewodu,Podświetlenie klawiszy,Obsługa makr,Podpórka pod nadgarstki,Regulowany kąt pochylenia,Szerokość,Wysokość,Popularne,Liczba klawiszy,Głębokość,Kolor podświetlenia klawiatury,Dystrybucja
-Logitech MX Keys Czarny (920-009415),https://www.ceneo.pl/85936012,429,4.79,75,Logitech,Klawiatura,Bluetooth,Bezprzewodowa,Mechaniczna,MX Keys,Czarne,Nie dotyczy,Tak,Nie,Nie,Nie,430 mm,205 mm,,Nie dotyczy,Nie dotyczy,Nie dotyczy,Nie dotyczy
-SteelSeries Apex PRO TKL OmniPoint,https://www.ceneo.pl/89677853,599,4.85,13,Steelseries,Klawiatura,USB,Przewodowa,Mechaniczna,Apex PRO TKL OmniPoint,Czarne,Nie dotyczy,Tak,Nie dotyczy,Tak,Nie dotyczy,Nie dotyczy,Nie dotyczy,,Nie dotyczy,Nie dotyczy,Nie dotyczy,Nie dotyczy
-        '''
-
-        mouseData = '''
-        name,url,price,score,reviews,Producent,Rodzaj,Liczba przycisków,Podświetlenie myszy,Kolor,Komunikacja,Interfejs,Rozdzielczość,Zasięg,Liczba rolek,Programowalne przyciski,Waga,Model,Popularne,Dystrybucja,Typ urządzenia
-Razer Viper Ultimate (RZ01-03050100-R3G1),https://www.ceneo.pl/89714621,349,4.82,17,Razer,Mysz optyczna,8 przycisków,Tak,Czarne,Bezprzewodowa,USB,20000dpi,15m,1,Tak,74 g,Viper Ultimate,,Nie dotyczy,Nie dotyczy
-Logitech G Pro X Superlight Czarny (910005880),https://www.ceneo.pl/100911747,470,5.00,12,Logitech,Mysz optyczna,5 przycisków,Nie,Czarne,Bezprzewodowa,USB (Radio 2.4 GHz),24500dpi,10m,1,Tak,63 g,G Pro X Superlight,,Nie dotyczy,Nie dotyczy
-'''
-
-        if compSelect == 'mouse':
-            textData = mouseData
-            graphic_theme = "computer mouse"
-            graphic_theme2 = "computer"
-            category = "Myszki komputerowe&Porównania myszek"
-            length = 4000
-            title = "Porównanie myszek"
-            isfaq = 0
-        elif compSelect == 'keyboard':
-            textData = keyboardData
-            graphic_theme = "computer keyboard"
-            graphic_theme2 = "computer"
-            category = "Klawiatury komputerowe&Porównania klawiatur"
-            length = 4000
-            title = "Porównanie klawiatur"
-            isfaq = 0
+        # if compSelect == 'mouse':
+        #     textData = mouseData
+        #     graphic_theme = "computer mouse"
+        #     graphic_theme2 = "computer"
+        #     category = "Myszki komputerowe&Porównania myszek"
+        #     length = 4000
+        #     title = "Porównanie myszek"
+        #     isfaq = 0
+        # elif compSelect == 'keyboard':
+        #     textData = keyboardData
+        #     graphic_theme = "computer keyboard"
+        #     graphic_theme2 = "computer"
+        #     category = "Klawiatury komputerowe&Porównania klawiatur"
+        #     length = 4000
+        #     title = "Porównanie klawiatur"
+        #     isfaq = 0
         # print(settings.STATICFILES_DIRS[0])
         # makes texts, graphics, faqs and publish all to wp
 

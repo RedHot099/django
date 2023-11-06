@@ -255,7 +255,7 @@
                 </div>
             </div>
         </div>
-        <div id="comp-card" class="col-md-6" style="display: none;">
+        <div id="comp-card" class="col-md-6">
             <div class="card shadow narrow-card">
                 <div class="card-body">
                     <h5 class="card-title">Porównywarka</h5>
@@ -279,11 +279,11 @@
                     <div class="form-group">
                         <label>Grafiki:</label>
                         <div class="checkbox-container">
-                            <input type="radio" id="pixabay" name="graphicSource_comp" value="pixabay">
+                            <input type="radio" id="pixabay_comp" name="graphicSource_comp" value="pixabay">
                             <label for="pixabay">Pixabay</label>
-                            <input type="radio" id="pexels" name="graphicSource_comp" value="pexels">
+                            <input type="radio" id="pexels_comp" name="graphicSource_comp" value="pexels">
                             <label for="pexels">Pexels</label>
-                            <input type="radio" id="ai" name="graphicSource_comp" value="ai">
+                            <input type="radio" id="ai_comp" name="graphicSource_comp" value="ai">
                             <label for="ai">AI</label>
                         </div>
                     </div>
@@ -291,12 +291,23 @@
                     <div class="form-group">
                         <label>Nakładka?:</label>
                         <div class="checkbox-container">
-                            <input type="radio" id="withOverlay_comp" name="overlayOption" value="withOverlay">
+                            <input type="radio" id="withOverlay_comp" name="overlayOption_comp" value="withOverlay">
                             <label for="withOverlay">Z nakładką</label>
-                            <input type="radio" id="withoutOverlay_comp" name="overlayOption" value="withoutOverlay">
+                            <input type="radio" id="withoutOverlay_comp" name="overlayOption_comp"
+                                value="withoutOverlay">
                             <label for="withoutOverlay">Bez nakładki</label>
                         </div>
                     </div>
+
+                    <div class="color-picker-container">
+                        <label for="colorPicker_comp">Wybierz kolor:</label>
+                        <input type="color" id="colorPicker_comp" name="color" onchange="updateRGB(this.value)">
+                    </div>
+
+                    <div style="display:none;">
+                        <input type="hidden" id="rgbValue_comp" name="rgbValue">
+                    </div>
+
 
                     <div class="form-group">
                         <label for="dateInput">Wybierz datę dla początku publikacji:</label>
@@ -305,16 +316,16 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="publishIntervalInput">Co ile mają publikować się wpisy?:</label>
+                        <label for="publishIntervalInput_comp">Co ile mają publikować się wpisy?:</label>
                         <input type="number" id="publishInterval_comp" class="form-control" min="1" max="99">
                     </div>
 
                     <div class="form-group">
-                        <label for="withFaq">Czy chcesz wygenerować FAQ dla tekstów?</label>
-                        <input type="radio" id="withFaq" name="faqOption_comp" value="withFaq">
-                        <label for="withFaq">Tak</label>
-                        <input type="radio" id="withoutFaq" name="faqOption_comp" value="withoutFaq">
-                        <label for="withoutFaq">Nie</label>
+                        <label for="withFaq_comp">Czy chcesz wygenerować FAQ dla tekstów?</label>
+                        <input type="radio" id="withFaq_comp" name="faqOption_comp" value="withFaq">
+                        <label for="withFaq_comp">Tak</label>
+                        <input type="radio" id="withoutFaq_comp" name="faqOption_comp" value="withoutFaq">
+                        <label for="withoutFaq_comp">Nie</label>
                     </div>
 
                     <div class="form-group">
