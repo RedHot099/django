@@ -1,159 +1,191 @@
+var currentUrl = window.location.href;
+
 function updateRGB(value) {
-             
-    var r = parseInt(value.substring(1, 3), 16);
-    var g = parseInt(value.substring(3, 5), 16);
-    var b = parseInt(value.substring(5, 7), 16);
-    var rgbValue = r + "," + g + "," + b;
-    $('#rgbValue').val(rgbValue);
-
-    const currentUrl = window.location.href;
-    localStorage.setItem(currentUrl + '-overlayColor', rgbValue);
-
-    console.log(rgbValue);
+	var r = parseInt(value.substring(1, 3), 16);
+	var g = parseInt(value.substring(3, 5), 16);
+	var b = parseInt(value.substring(5, 7), 16);
+	var rgbValue = r + ',' + g + ',' + b;
+	$('#rgbValue').val(rgbValue);
+	console.log(rgbValue);
 }
 
-$(document).ready(function() {
-    var cardId = $('#classic_main').data('card-id');
+function rgbToHex(r, g, b) {
+	return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
 
-    $('button[type="submit_tsv"]').on('click', function(event) {
-        event.preventDefault();
-        console.log('Zaliczyło!');
+function hexToRgb(hex) {
+	var r = parseInt(hex.slice(1, 3), 16);
+	var g = parseInt(hex.slice(3, 5), 16);
+	var b = parseInt(hex.slice(5, 7), 16);
+	return r + ',' + g + ',' + b;
+}
 
-        
+function updateColorInLocalStorage(color) {
+	localStorage.setItem(currentUrl + '-overlayColor', color);
+}
 
-        var colorValue = $('#rgbValue').val() || '204,255,102';
+$(document).ready(function () {
+	var cardId = $('#classic_main').data('card-id');
 
-        // const currentUrl = window.location.href;
-        // const savedOverlayColor = localStorage.getItem(currentUrl + '-overlayColor');
-        // if (savedOverlayColor) {
-        //     $('#rgbValue').val(savedOverlayColor);
-        // }
+	var defaultColor = '204,255,102';
+	var savedColor = localStorage.getItem(currentUrl + '-overlayColor');
 
-        const data = {
-            tsvInput: $('#tsvInput').val(),
-            graphicSource: $('input[name="graphicSource"]:checked').val(),
-            overlayOption: $('input[name="overlayOption"]:checked').val(),
-            dateInput: $('#dateInput').val(),
-            publishInterval: $('#publishInterval').val(),
-            openai_api_key: $('#openai_api_key_classic').val(),
-            faqOption: $('input[name="faqOption"]:checked').val(),
-            overlayColor: colorValue
-        };
+	if (savedColor) {
+		var savedColorArray = savedColor.split(',').map(Number);
+		var hexColor = rgbToHex(
+			savedColorArray[0],
+			savedColorArray[1],
+			savedColorArray[2]
+		);
+		$('#colorPicker').val(hexColor);
+		$('#rgbValue').val(savedColor);
+	} else {
+		var defaultColorArray = defaultColor.split(',').map(Number);
+		var hexDefaultColor = rgbToHex(
+			defaultColorArray[0],
+			defaultColorArray[1],
+			defaultColorArray[2]
+		);
+		$('#colorPicker').val(hexDefaultColor);
+		updateColorInLocalStorage(defaultColor);
+	}
 
-        // console.log(data.overlayColor);
+	$('button[type="submit_tsv"]').on('click', function (event) {
+		event.preventDefault();
+		console.log('Zaliczyło!');
 
-        $('#classic_main').hide();
-        $('#resetButton').hide();
+		var chosenColor = $('#rgbValue').val() || defaultColor;
 
-        $('table.table thead tr').append('<th>Status</th>');
+		if (chosenColor !== savedColor) {
+			updateColorInLocalStorage(chosenColor);
+		}
 
-        $('table.table tbody tr').each(function() {
-            $(this).append('<td class="status-cell"><div class="loading-icon"></div></td>');
-        });
+		const data = {
+			tsvInput: $('#tsvInput').val(),
+			graphicSource: $('input[name="graphicSource"]:checked').val(),
+			overlayOption: $('input[name="overlayOption"]:checked').val(),
+			dateInput: $('#dateInput').val(),
+			publishInterval: $('#publishInterval').val(),
+			openai_api_key: $('#openai_api_key_classic').val(),
+			faqOption: $('input[name="faqOption"]:checked').val(),
+			overlayColor: chosenColor,
+		};
 
-        
+		// console.log(data.overlayColor);
 
-        $.ajax({
-            url: '/api/create/' + cardId + '/zaplecze_classic/',
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken')
-            },
-            data: JSON.stringify(data),
-            success: function(response) {
-                console.log(response);
-                
-            },
-            error: function(error) {
-                console.error('Error:', error);
-            }
-        });
+		$('#classic_main').hide();
+		$('#resetButton').hide();
 
-    });
+		$('table.table thead tr').append('<th>Status</th>');
 
-    function getWordpressPostsTitles() {
-        const password = document.getElementById('wp_api_key').innerText;
-        const domain = document.getElementById('domain').innerText;
-        const login = document.getElementById('wp_user').innerText;
-      
-        const token = btoa(`${login}:${password}`);
-        const authHeader = { 'Authorization': `Basic ${token}` };
-      
-        const apiUrl = `https://${domain}/wp-json/wp/v2/posts`;
-      
-        const tsvTitles = parseTSV($('#tsvInput').val()).map(decodeHTMLEntities);
+		$('table.table tbody tr').each(function () {
+			$(this).append(
+				'<td class="status-cell"><div class="loading-icon"></div></td>'
+			);
+		});
 
-        fetch(apiUrl, { headers: authHeader })
-            .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-            })
-            .then(posts => {
-            const wordpressTitles = posts.map(post => decodeHTMLEntities(post.title.rendered));
-            console.log('Tytuły, które pokrywają się z plikiem TSV:');
-            tsvTitles.forEach(tsvTitle => {
-                if (wordpressTitles.includes(tsvTitle)) {
-                console.log(`${tsvTitle} - opublikowano`);
-                updateStatusCells(posts);
-                }
-            });
-            })
-            .catch(error => {
-            console.error('Wystąpił błąd podczas pobierania wpisów:', error);
-            });
-      }
-      
-      function parseTSV(tsv) {
-        const lines = tsv.trim().split("\n");
-        const headers = lines.shift().split("\t");
-        const titleIndex = headers.indexOf("title");
-      
-        if (titleIndex === -1) {
-          console.error("Nie znaleziono kolumny 'title'");
-          return [];
-        }
-      
-        return lines.map(line => {
-          const columns = line.split("\t");
-          return columns[titleIndex];
-        });
-      }
+		$.ajax({
+			url: '/api/create/' + cardId + '/zaplecze_classic/',
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'X-CSRFToken': getCookie('csrftoken'),
+			},
+			data: JSON.stringify(data),
+			success: function (response) {
+				console.log(response);
+			},
+			error: function (error) {
+				console.error('Error:', error);
+			},
+		});
+	});
 
-      function decodeHTMLEntities(text) {
-        var textArea = document.createElement('textarea');
-        textArea.innerHTML = text;
-        return textArea.value;
-      }
-      
-      setInterval(getWordpressPostsTitles, 30000);
+	function getWordpressPostsTitles() {
+		const password = document.getElementById('wp_api_key').innerText;
+		const domain = document.getElementById('domain').innerText;
+		const login = document.getElementById('wp_user').innerText;
 
-      function updateStatusCells(posts) {
-        const wordpressTitles = posts.map(post => decodeHTMLEntities(post.title.rendered));
-        $('table.table tbody tr').each(function() {
-            var titleCell = $(this).find('td:first');
-            var statusCell = $(this).find('.status-cell');
-            if (wordpressTitles.includes(titleCell.text())) {
-                statusCell.html('<div class="checkmark">✓</div>');
-            }
-        });
-    }
-    
+		const token = btoa(`${login}:${password}`);
+		const authHeader = { Authorization: `Basic ${token}` };
 
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = $.trim(cookies[i]);
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
+		const apiUrl = `https://${domain}/wp-json/wp/v2/posts`;
+
+		const tsvTitles = parseTSV($('#tsvInput').val()).map(decodeHTMLEntities);
+
+		fetch(apiUrl, { headers: authHeader })
+			.then((response) => {
+				if (!response.ok) {
+					throw new Error(`HTTP error! status: ${response.status}`);
+				}
+				return response.json();
+			})
+			.then((posts) => {
+				const wordpressTitles = posts.map((post) =>
+					decodeHTMLEntities(post.title.rendered)
+				);
+				console.log('Tytuły, które pokrywają się z plikiem TSV:');
+				tsvTitles.forEach((tsvTitle) => {
+					if (wordpressTitles.includes(tsvTitle)) {
+						console.log(`${tsvTitle} - opublikowano`);
+						updateStatusCells(posts);
+					}
+				});
+			})
+			.catch((error) => {
+				console.error('Wystąpił błąd podczas pobierania wpisów:', error);
+			});
+	}
+
+	function parseTSV(tsv) {
+		const lines = tsv.trim().split('\n');
+		const headers = lines.shift().split('\t');
+		const titleIndex = headers.indexOf('title');
+
+		if (titleIndex === -1) {
+			console.error("Nie znaleziono kolumny 'title'");
+			return [];
+		}
+
+		return lines.map((line) => {
+			const columns = line.split('\t');
+			return columns[titleIndex];
+		});
+	}
+
+	function decodeHTMLEntities(text) {
+		var textArea = document.createElement('textarea');
+		textArea.innerHTML = text;
+		return textArea.value;
+	}
+
+	setInterval(getWordpressPostsTitles, 30000);
+
+	function updateStatusCells(posts) {
+		const wordpressTitles = posts.map((post) =>
+			decodeHTMLEntities(post.title.rendered)
+		);
+		$('table.table tbody tr').each(function () {
+			var titleCell = $(this).find('td:first');
+			var statusCell = $(this).find('.status-cell');
+			if (wordpressTitles.includes(titleCell.text())) {
+				statusCell.html('<div class="checkmark">✓</div>');
+			}
+		});
+	}
+
+	function getCookie(name) {
+		let cookieValue = null;
+		if (document.cookie && document.cookie !== '') {
+			const cookies = document.cookie.split(';');
+			for (let i = 0; i < cookies.length; i++) {
+				const cookie = $.trim(cookies[i]);
+				if (cookie.substring(0, name.length + 1) === name + '=') {
+					cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+					break;
+				}
+			}
+		}
+		return cookieValue;
+	}
 });
