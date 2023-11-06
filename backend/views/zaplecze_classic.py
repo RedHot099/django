@@ -48,7 +48,8 @@ class ZapleczeClassic(View):
         openai.api_key = data.get("openai_api_key") #sk
         faq_option = data.get("faqOption") #withFaq, withoutFaq
         tsv_input = data.get("tsvInput")
-
+        # print("color\n\n")
+        # print(overlay_color)
         rgb_fill_preset = overlay_color.split(",")
         rgb_fill_preset = [int(channel) for channel in rgb_fill_preset]
 

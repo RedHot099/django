@@ -6,6 +6,9 @@ function updateRGB(value) {
     var rgbValue = r + "," + g + "," + b;
     $('#rgbValue').val(rgbValue);
 
+    const currentUrl = window.location.href;
+    localStorage.setItem(currentUrl + '-overlayColor', rgbValue);
+
     console.log(rgbValue);
 }
 
@@ -15,8 +18,16 @@ $(document).ready(function() {
     $('button[type="submit_tsv"]').on('click', function(event) {
         event.preventDefault();
         console.log('Zaliczyło!');
+
         
-        var colorValue = $('#rgbValue').val();
+
+        var colorValue = $('#rgbValue').val() || '204,255,102';
+
+        // const currentUrl = window.location.href;
+        // const savedOverlayColor = localStorage.getItem(currentUrl + '-overlayColor');
+        // if (savedOverlayColor) {
+        //     $('#rgbValue').val(savedOverlayColor);
+        // }
 
         const data = {
             tsvInput: $('#tsvInput').val(),
@@ -29,6 +40,18 @@ $(document).ready(function() {
             overlayColor: colorValue
         };
 
+        // console.log(data.overlayColor);
+
+        $('#classic_main').hide();
+        $('#resetButton').hide();
+
+        $('table.table thead tr').append('<th>Status</th>');
+
+        $('table.table tbody tr').each(function() {
+            $(this).append('<td class="status-cell"><div class="loading-icon"></div></td>');
+        });
+
+        
 
         $.ajax({
             url: '/api/create/' + cardId + '/zaplecze_classic/',
@@ -46,10 +69,10 @@ $(document).ready(function() {
                 console.error('Error:', error);
             }
         });
+
     });
 
     function getWordpressPostsTitles() {
-
         const password = document.getElementById('wp_api_key').innerText;
         const domain = document.getElementById('domain').innerText;
         const login = document.getElementById('wp_user').innerText;
@@ -58,28 +81,65 @@ $(document).ready(function() {
         const authHeader = { 'Authorization': `Basic ${token}` };
       
         const apiUrl = `https://${domain}/wp-json/wp/v2/posts`;
-        console.log(apiUrl);
       
+        const tsvTitles = parseTSV($('#tsvInput').val()).map(decodeHTMLEntities);
+
         fetch(apiUrl, { headers: authHeader })
-          .then(response => {
+            .then(response => {
             if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
             return response.json();
-          })
-          .then(posts => {
-            console.log('Tytuły wpisów:');
-            posts.forEach(post => {
-              console.log(post.title.rendered);
+            })
+            .then(posts => {
+            const wordpressTitles = posts.map(post => decodeHTMLEntities(post.title.rendered));
+            console.log('Tytuły, które pokrywają się z plikiem TSV:');
+            tsvTitles.forEach(tsvTitle => {
+                if (wordpressTitles.includes(tsvTitle)) {
+                console.log(`${tsvTitle} - opublikowano`);
+                updateStatusCells(posts);
+                }
             });
-          })
-          .catch(error => {
+            })
+            .catch(error => {
             console.error('Wystąpił błąd podczas pobierania wpisów:', error);
-          });
+            });
       }
       
-      setInterval(getWordpressPostsTitles, 600000);
+      function parseTSV(tsv) {
+        const lines = tsv.trim().split("\n");
+        const headers = lines.shift().split("\t");
+        const titleIndex = headers.indexOf("title");
+      
+        if (titleIndex === -1) {
+          console.error("Nie znaleziono kolumny 'title'");
+          return [];
+        }
+      
+        return lines.map(line => {
+          const columns = line.split("\t");
+          return columns[titleIndex];
+        });
+      }
 
+      function decodeHTMLEntities(text) {
+        var textArea = document.createElement('textarea');
+        textArea.innerHTML = text;
+        return textArea.value;
+      }
+      
+      setInterval(getWordpressPostsTitles, 30000);
+
+      function updateStatusCells(posts) {
+        const wordpressTitles = posts.map(post => decodeHTMLEntities(post.title.rendered));
+        $('table.table tbody tr').each(function() {
+            var titleCell = $(this).find('td:first');
+            var statusCell = $(this).find('.status-cell');
+            if (wordpressTitles.includes(titleCell.text())) {
+                statusCell.html('<div class="checkmark">✓</div>');
+            }
+        });
+    }
     
 
     function getCookie(name) {
