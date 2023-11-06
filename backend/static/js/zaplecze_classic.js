@@ -1,5 +1,14 @@
 var currentUrl = window.location.href;
 
+document.addEventListener('DOMContentLoaded', (event) => {
+	const dateInput = document.getElementById('dateInput');
+	const today = new Date();
+	const day = String(today.getDate()).padStart(2, '0');
+	const month = String(today.getMonth() + 1).padStart(2, '0');
+	const year = today.getFullYear();
+	dateInput.value = `${year}-${month}-${day}`;
+});
+
 function updateRGB(value) {
 	var r = parseInt(value.substring(1, 3), 16);
 	var g = parseInt(value.substring(3, 5), 16);
@@ -25,6 +34,15 @@ function updateColorInLocalStorage(color) {
 }
 
 $(document).ready(function () {
+	// change of date input
+	const today = new Date();
+	const day = String(today.getDate()).padStart(2, '0');
+	const month = String(today.getMonth() + 1).padStart(2, '0');
+	const year = today.getFullYear();
+	$('#dateInput').val(`${year}-${month}-${day}`);
+
+	// end of snippet
+
 	var cardId = $('#classic_main').data('card-id');
 
 	var defaultColor = '204,255,102';
@@ -159,7 +177,7 @@ $(document).ready(function () {
 		return textArea.value;
 	}
 
-	setInterval(getWordpressPostsTitles, 30000);
+	setInterval(getWordpressPostsTitles, 90000);
 
 	function updateStatusCells(posts) {
 		const wordpressTitles = posts.map((post) =>
