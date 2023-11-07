@@ -55,7 +55,7 @@
     <div class="row">
         <div class="col-md-6">
             <div class="card shadow narrow-card">
-                {% if data.wp_api_key %}
+                {% if data.wp_api_key and data.wp_api_key != "None" %}
                 <div class="card-body">
                     <h5 class="card-title">Create categories</h5>
                 </div>
@@ -104,7 +104,7 @@
                 {% endif %}
             </div>
         </div>
-        {% if data.wp_api_key %}
+        {% if data.wp_api_key and data.wp_api_key != "None" %}
         <div class="col-md-6">
             <div class="card shadow narrow-card">
                 <div class="card-body">
